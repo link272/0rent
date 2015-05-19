@@ -32,6 +32,11 @@ class Ownership(models.Model):
             instance.private_group = group
     # SIGNAUX
     
+    # compte le nombre d'utilisation
+    @property
+    def nb_use(self):
+        return self.use_set.count()
+    
     
     
 # Everything about Product
@@ -48,13 +53,48 @@ class Product(models.Model):
     def __str__(self):
         return self.name
 
-    # compte le nombre d'utilisation
-    @property
-    def nb_use(self):
-        return self.use_set.count()
+
+            
+# Everything about Product Finance
+class ProductBalance(Balance, models.Model):
+    
+    product = models.OneToOneField(Product)
+    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    step = models.DecimalField(max_digits=8, decimal_places=2,
+                               null=True, blank=True)
+                               
+    # retourne le prix de la prochaine utilisation
+    def updated_cost(self, nb_use):
+        if self.step and nb_use * self.step <= self.cost:
+            self.current_cost = self.step
+        else:
+            self.current_cost = self.cost / (1 + nb_use)
+            self.current_cost = self.formatting(self.current_cost)
+        return current_cost
+        
+    
 
 
-    # rembourse les utilisateurs précedents
+# Model Use
+class Register(models.Model):
+    #  related_name='uses' : uses à la place de use_set
+    product = models.ForeignKey(Product)
+    user = models.ForeignKey(User)
+    date = models.DateField(auto_now_add=True)
+    
+    # Ajout complet d'une utilisation
+    # (remboursement, maj balance utilisateur et création use)
+    def add_use_for(self, user):
+        with transaction.atomic():
+            self.recompute_use_balances()
+            profil = user.profil
+            profil.balance = profil.balance - self.price
+            profil.save()
+            # use = Use(product = self, user= request.user)
+            # use.save()
+            self.use_set.create(user=user)
+    
     def recompute_use_balances(self):
         nb_use = self.nb_use
         price = self.price
@@ -108,44 +148,6 @@ class Product(models.Model):
                 profil = self.first_owner.profil
                 profil.balance = profil.balance + price
                 profil.save()
-
-    # Ajout complet d'une utilisation
-    # (remboursement, maj balance utilisateur et création use)
-    def add_use_for(self, user):
-        with transaction.atomic():
-            self.recompute_use_balances()
-            profil = user.profil
-            profil.balance = profil.balance - self.price
-            profil.save()
-            # use = Use(product = self, user= request.user)
-            # use.save()
-            self.use_set.create(user=user)
-            
-# Everything about Product Finance
-class ProductBalance(Balance, models.Model):
-    
-    product = models.OneToOneField(Product)
-    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    step = models.DecimalField(max_digits=8, decimal_places=2,
-                               null=True, blank=True)
-                               
-    # retourne le prix de la prochaine utilisation
-    def updated_cost(self, nb_use):
-        if self.step and nb_use * self.step <= self.cost:
-            self.current_cost = self.step
-        else:
-            self.current_cost = self.cost / (1 + nb_use)
-            self.current_cost = self.formatting(self.current_cost)
-        return current_cost
-
-
-# Model Use
-class Register(models.Model):
-    #  related_name='uses' : uses à la place de use_set
-    product = models.ForeignKey(Product)
-    user = models.ForeignKey(User)
-    date = models.DateField(auto_now_add=True)
 
 
 # Model Profil
