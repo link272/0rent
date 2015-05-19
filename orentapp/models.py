@@ -85,41 +85,26 @@ class ProductBalance(Balance, models.Model):
 # Model Use
 class Register(models.Model):
     
-    #  related_name='uses' : uses à la place de use_set
     product = models.ForeignKey(Product)
     user = models.ForeignKey(User)
     date = models.DateField(auto_now_add=True)
     
+    def update_user_balance(self):
+        balance.current = balance.current - self.product.current_cost
+        self.profil.save()
+    
     # Ajout complet d'une utilisation
     # (remboursement, maj balance utilisateur et création use)
-    def add_use_for(self, user):
+    def use_product_for(self, user):
         with transaction.atomic(): #??????????
             self.recompute_use_balances()
-            profil = user.profil
-            profil.balance = profil.balance - self.price
-            profil.save()
-            # use = Use(product = self, user= request.user)
-            # use.save()
             self.use_set.create(user=user)
-            
-    # SIGNAUX
-    # Création du groupe pour un nouveau produit
-    @receiver(post_save, sender=Product)
-    def create_group_for_product(sender, instance, created, **kwargs):
-
-        if created:
-            # product.check()
-            group = Group(name='ppg@{}'.format(instance.id))
-            group.save()
-            instance.first_owner.groups.add(group)
-            instance.private_group = group
-    # SIGNAUX
     
-    def recompute_use_balances(self):
-        nb_use = self.nb_use
-        price = self.price
-        step = self.step
-        cost = self.cost
+    def recompute_group_users_balances(self):
+        nb_use = self.product.owners.nb_use
+        price = self.product.current_cost
+        step = self.product.step
+        cost = self.product.initial_cost
         if step:
             # l'utilisation ne suffit pas pour atteindre le cost
             if (nb_use + 1) * step < cost:
