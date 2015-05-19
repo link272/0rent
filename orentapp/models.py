@@ -13,7 +13,10 @@ Balance     =>      ProfilBalance       ProductBalance
 """
 
 # Everything about Finance
-class Balance(object):
+class Balance(models.Model):
+	
+	class Meta:
+        abstract = True
     
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
@@ -31,7 +34,7 @@ class Balance(object):
         
 # Model Profil
 class Profil(User):
-       
+
     balance = models.OneToOneField(ProfilBalance)
         
     #SIGNAUX    
@@ -44,7 +47,7 @@ class Profil(User):
     
     
 # Everything about User Finance
-class ProfilBalance(Balance, models.Model):
+class ProfilBalance(Balance):
 
     current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     
@@ -64,7 +67,7 @@ class Product(models.Model):
         return self.name
             
 # Everything about Product Finance
-class ProductBalance(Balance, models.Model):
+class ProductBalance(Balance):
     
     product = models.OneToOneField(Product)
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
