@@ -5,26 +5,50 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
+# Everything about Finance
+class Balance(object):
+    pass
 
-# Model Product
-class Product(models.Model):
-    name = models.CharField(max_length=64)
-    description = models.TextField(max_length=512, null=True, blank=True)
-    # Coût de départ
-    cost = models.DecimalField(max_digits=8, decimal_places=2)
-    # Date de publication
-    post_date = models.DateField(auto_now_add=True)
-    # Date de dernière modification
-    update_date = models.DateField(auto_now=True)
-    # Utilisateur qui a mis en ligne
-    first_owner = models.ForeignKey(User)
-    # TRUE = Public (affiché pour tout le monde) FALSE = Privé
-    is_public = models.BooleanField(default=True)
-    # Groupe dans le cas d'un produit privé
-    private_group = models.OneToOneField(Group, null=True, blank=True)
-    # Step = marche pour remboursement progressif
+# Everything about User Finance
+class ProfilBalance(Balance, models.Model):
+    
+    user = models.OneToOneField(User)
+    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+
+
+# Everything about Product Finance
+class ProductBalance(Balance, models.Model):
+    
+    product = models.OneToOneField(Product)
+    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.DecimalField(max_digits=8, decimal_places=2,
                                null=True, blank=True)
+                               
+    # retourne le prix de la prochaine utilisation
+    @property
+    def update_price(self, nb_use):
+        
+        if self.step and nb_use * self.step <= self.cost:
+            self.price = self.step
+        else:
+            self.price = self.cost / (1 + nb_use)
+            self.price = price.quantize(Decimal('0.01'), decimal.ROUND_UP)
+        return price
+
+
+# Everything about Product
+class Product(models.Model):
+    
+    name = models.CharField(max_length=64)
+    description = models.TextField(max_length=512, null=True, blank=True)
+    post_date = models.DateField(auto_now_add=True)
+    update_date = models.DateField(auto_now=True)
+    first_owner = models.ForeignKey(User)
+    is_public = models.BooleanField(default=True)
+    private_group = models.OneToOneField(Group, null=True, blank=True)
+    balance = models.OneToOneField(ProductBalance)
+
 
     def __str__(self):
         return self.name
@@ -124,7 +148,7 @@ class Use(models.Model):
 
 
 # Model Profil
-class Profil(models.Model):
+class Profil(User):
         user = models.OneToOneField(User)
         balance = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
