@@ -5,6 +5,13 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
+"""
+                    User                Product
+                    Profil              -
+Balance     =>      ProfilBalance       ProductBalance
+                        Register <=> Ownership
+"""
+
 # Everything about Finance
 class Balance(object):
     
@@ -18,19 +25,6 @@ class Ownership(models.Model):
     is_public = models.BooleanField(default=True)
     nb_use = models.IntegerFields(default = 0)
     private_group = models.OneToOneField(Group, null=True, blank=True)
-    
-    # SIGNAUX
-    # Création du groupe pour un nouveau produit
-    @receiver(post_save, sender=Product)
-    def create_group_for_product(sender, instance, created, **kwargs):
-
-        if created:
-            # product.check()
-            group = Group(name='ppg@{}'.format(instance.id))
-            group.save()
-            instance.first_owner.groups.add(group)
-            instance.private_group = group
-    # SIGNAUX
     
     # compte le nombre d'utilisation
     @property
@@ -78,6 +72,7 @@ class ProductBalance(Balance, models.Model):
 
 # Model Use
 class Register(models.Model):
+    
     #  related_name='uses' : uses à la place de use_set
     product = models.ForeignKey(Product)
     user = models.ForeignKey(User)
@@ -94,6 +89,19 @@ class Register(models.Model):
             # use = Use(product = self, user= request.user)
             # use.save()
             self.use_set.create(user=user)
+            
+        # SIGNAUX
+    # Création du groupe pour un nouveau produit
+    @receiver(post_save, sender=Product)
+    def create_group_for_product(sender, instance, created, **kwargs):
+
+        if created:
+            # product.check()
+            group = Group(name='ppg@{}'.format(instance.id))
+            group.save()
+            instance.first_owner.groups.add(group)
+            instance.private_group = group
+    # SIGNAUX
     
     def recompute_use_balances(self):
         nb_use = self.nb_use
