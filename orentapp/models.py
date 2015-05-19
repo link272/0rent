@@ -14,9 +14,8 @@ Balance     =>      ProfilBalance       ProductBalance
 
 # Everything about Finance
 class Balance(models.Model):
-	
-	class Meta:
-		abstract = True
+class Meta:
+abstract = True
     
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
