@@ -31,7 +31,7 @@ class Ownership(models.Model):
 		self.nb_use = group.count()
 		self.save()
 		return self
-		
+	
 	# SIGNAUX
     @receiver(post_save, sender=Product)
     def create_group_for_product(self, sender, created, **kwargs):
@@ -93,7 +93,7 @@ class Register(models.Model):
     # Ajout complet d'une utilisation
     # (remboursement, maj balance utilisateur et création use)
     def add_use_for(self, user):
-        with transaction.atomic():
+        with transaction.atomic(): #??????????
             self.recompute_use_balances()
             profil = user.profil
             profil.balance = profil.balance - self.price
