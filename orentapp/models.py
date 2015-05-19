@@ -14,7 +14,7 @@ class Balance(object):
 # Everything about Ownership
 class Ownership(models.Model):
     
-    first_owner = models.ForeignKey(User)
+    first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
     private_group = models.OneToOneField(Group, null=True, blank=True)
     
