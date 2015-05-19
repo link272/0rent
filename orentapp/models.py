@@ -24,12 +24,24 @@ class Ownership(models.Model):
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
     nb_use = models.IntegerFields(default = 0)
-    private_group = models.OneToOneField(Group, null=True, blank=True)
+    product_group = models.OneToOneField(Group, null=True, blank=True)
     
-    # compte le nombre d'utilisation
-    @property
-    def nb_use(self):
-        return self.use_set.count()
+    def update_nb_use(self):
+    	group = self.product_group.objects.all()
+		self.nb_use = group.count()
+		self.save()
+		return self
+		
+	# SIGNAUX
+    @receiver(post_save, sender=Product)
+    def create_group_for_product(self, sender, created, **kwargs):
+        if created:
+            group = Group(name='ppg@{}'.format(instance.id))
+            group.save()
+            self.first_owner.groups.add(group) #????????
+            self.product_group = group
+            self.save()
+    # SIGNAUX
     
     
     
@@ -58,14 +70,14 @@ class ProductBalance(Balance, models.Model):
     step = models.DecimalField(max_digits=8, decimal_places=2,
                                null=True, blank=True)
                                
-    # retourne le prix de la prochaine utilisation
-    def updated_cost(self, nb_use):
+    # recalcul le prix de la prochaine utilisation
+    def update_current_cost(self, nb_use):
         if self.step and nb_use * self.step <= self.cost:
             self.current_cost = self.step
         else:
             self.current_cost = self.cost / (1 + nb_use)
             self.current_cost = self.formatting(self.current_cost)
-        return current_cost
+        self.save()
         
     
 
@@ -90,7 +102,7 @@ class Register(models.Model):
             # use.save()
             self.use_set.create(user=user)
             
-        # SIGNAUX
+    # SIGNAUX
     # Création du groupe pour un nouveau produit
     @receiver(post_save, sender=Product)
     def create_group_for_product(sender, instance, created, **kwargs):
