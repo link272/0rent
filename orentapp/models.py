@@ -18,8 +18,71 @@ class Balance(object):
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
         
+    def credit(self, credit)
+    	self.current = self.current + credit
+    	self.current = self.formatting(self.current)
+    	self.save()
+    	
+    def debit(self, credit)
+    	self.current = self.current - debit
+    	self.current = self.formatting(self.current)
+    	self.save()
+
+        
+# Model Profil
+class Profil(User):
+       
+    balance = models.OneToOneField(ProfilBalance)
+        
+    #SIGNAUX    
+    # Création du profil pour un nouvel utilisateur
+    @receiver(post_save, sender=User)
+    def create_profil_for_user(sender, instance, created, **kwargs):
+        if created:
+            Profil.objects.create(user=instance)
+    #SIGNAUX
+    
+    
+# Everything about User Finance
+class ProfilBalance(Balance, models.Model):
+
+    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+    
+    
+# Everything about Product
+class Product(models.Model):
+    
+    name = models.CharField(max_length=64)
+    description = models.TextField(max_length=512, null=True, blank=True)
+    post_date = models.DateField(auto_now_add=True)
+    update_date = models.DateField(auto_now=True)
+    balance = models.OneToOneField(ProductBalance)
+    owners = models.OneToOneField(ProductOwnership)
+
+
+    def __str__(self):
+        return self.name
+            
+# Everything about Product Finance
+class ProductBalance(Balance, models.Model):
+    
+    product = models.OneToOneField(Product)
+    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    current = models.DecimalField(max_digits=8, decimal_places=2)
+    step = models.DecimalField(max_digits=8, decimal_places=2,
+                               null=True, blank=True)
+                               
+    # recalcul le prix de la prochaine utilisation
+    def update_current_cost(self, nb_use):
+        if self.step and nb_use * self.step <= self.cost:
+            self.current_cost = self.step
+        else:
+            self.current_cost = self.cost / (1 + nb_use)
+            self.current_cost = self.formatting(self.current_cost)
+        self.save()
+        
 # Everything about Ownership
-class Ownership(models.Model):
+class ProductOwnership(models.Model):
     
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
@@ -43,55 +106,25 @@ class Ownership(models.Model):
             self.save()
     # SIGNAUX
     
-    
-    
-# Everything about Product
-class Product(models.Model):
-    
-    name = models.CharField(max_length=64)
-    description = models.TextField(max_length=512, null=True, blank=True)
-    post_date = models.DateField(auto_now_add=True)
-    update_date = models.DateField(auto_now=True)
-    balance = models.OneToOneField(ProductBalance)
-    owners = models.OneToOneField(Ownership)
-
-
-    def __str__(self):
-        return self.name
-
-
-            
-# Everything about Product Finance
-class ProductBalance(Balance, models.Model):
-    
-    product = models.OneToOneField(Product)
-    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    step = models.DecimalField(max_digits=8, decimal_places=2,
-                               null=True, blank=True)
-                               
-    # recalcul le prix de la prochaine utilisation
-    def update_current_cost(self, nb_use):
-        if self.step and nb_use * self.step <= self.cost:
-            self.current_cost = self.step
-        else:
-            self.current_cost = self.cost / (1 + nb_use)
-            self.current_cost = self.formatting(self.current_cost)
-        self.save()
         
     
-
-
 # Model Use
 class Register(models.Model):
     
     product = models.ForeignKey(Product)
-    user = models.ForeignKey(User)
+    profil = models.ForeignKey(Profil)
     date = models.DateField(auto_now_add=True)
     
     def update_user_balance(self):
+    	balance = self.profil.balance
         balance.current = balance.current - self.product.current_cost
         self.profil.save()
+    
+    def update_group_product_balance(self):
+    	group = self.product.owners.product_group.objects.all()
+    	for profil in group:
+    		profil.balance
+    	
     
     # Ajout complet d'une utilisation
     # (remboursement, maj balance utilisateur et création use)
@@ -154,22 +187,3 @@ class Register(models.Model):
                 profil.balance = profil.balance + price
                 profil.save()
 
-
-# Model Profil
-class Profil(User):
-        user = models.OneToOneField(User)
-        balance = user = models.OneToOneField(ProfilBalance)
-        
-    #SIGNAUX    
-    # Création du profil pour un nouvel utilisateur
-    @receiver(post_save, sender=User)
-    def create_profil_for_user(sender, instance, created, **kwargs):
-        if created:
-            Profil.objects.create(user=instance)
-    #SIGNAUX
-    
-    
-# Everything about User Finance
-class ProfilBalance(Balance, models.Model):
-
-    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
