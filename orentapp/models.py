@@ -16,6 +16,7 @@ class Ownership(models.Model):
     
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
+    nb_use = models.IntegerFields(default = 0)
     private_group = models.OneToOneField(Group, null=True, blank=True)
     
     # SIGNAUX
