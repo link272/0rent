@@ -101,7 +101,7 @@ class ProductOwnership(models.Model):
 	
 	# SIGNAUX
     @receiver(post_save, sender=Product)
-    def create_group_for_product(self, sender, created, **kwargs):
+    def create_product_group(self, sender, created, **kwargs):
         if created:
             group = Group(name='ppg@{}'.format(instance.id))
             group.save()
@@ -119,15 +119,6 @@ class Register(models.Model):
     profil = models.ForeignKey(Profil)
     date = models.DateField(auto_now_add=True)
     
-    def update_user_balance(self):
-    	balance = self.profil.balance
-        balance.current = balance.current - self.product.current_cost
-        self.profil.save()
-    
-    def update_group_product_balance(self):
-    	group = self.product.owners.product_group.objects.all()
-    	for profil in group:
-    		profil.balance
     	
     
     # Ajout complet d'une utilisation
