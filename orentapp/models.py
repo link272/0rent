@@ -31,6 +31,7 @@ class Balance(models.Model):
     	self.current = self.formatting(self.current)
     	self.save()
 
+
         
 # Model Profil
 class Profil(User):
