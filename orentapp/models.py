@@ -104,6 +104,7 @@ class Product(models.Model):
             # use = Use(product = self, user= request.user)
             # use.save()
             self.use_set.create(user=user)
+            
 # Everything about Product Finance
 class ProductBalance(Balance, models.Model):
     
