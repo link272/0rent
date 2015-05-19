@@ -18,6 +18,21 @@ class Ownership(models.Model):
     is_public = models.BooleanField(default=True)
     private_group = models.OneToOneField(Group, null=True, blank=True)
     
+    # SIGNAUX
+    # Création du groupe pour un nouveau produit
+    @receiver(post_save, sender=Product)
+    def create_group_for_product(sender, instance, created, **kwargs):
+
+        if created:
+            # product.check()
+            group = Group(name='ppg@{}'.format(instance.id))
+            group.save()
+            instance.first_owner.groups.add(group)
+            instance.private_group = group
+    # SIGNAUX
+    
+    
+    
 # Everything about Product
 class Product(models.Model):
     
@@ -125,7 +140,7 @@ class ProductBalance(Balance, models.Model):
 
 
 # Model Use
-class Use(models.Model):
+class Register(models.Model):
     #  related_name='uses' : uses à la place de use_set
     product = models.ForeignKey(Product)
     user = models.ForeignKey(User)
@@ -135,38 +150,18 @@ class Use(models.Model):
 # Model Profil
 class Profil(User):
         user = models.OneToOneField(User)
-        balance = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+        balance = user = models.OneToOneField(ProfilBalance)
         
+    #SIGNAUX    
+    # Création du profil pour un nouvel utilisateur
+    @receiver(post_save, sender=User)
+    def create_profil_for_user(sender, instance, created, **kwargs):
+        if created:
+            Profil.objects.create(user=instance)
+    #SIGNAUX
+    
+    
 # Everything about User Finance
 class ProfilBalance(Balance, models.Model):
-    
-    user = models.OneToOneField(User)
+
     current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-
-
-# Model PrivateGroup (Non utilisé)
-class PrivateGroup(Group):
-    product = models.ForeignKey(Product)
-
-
-# SIGNAUX
-
-# Création du groupe pour un nouveau produit
-@receiver(post_save, sender=Product)
-def create_group_for_product(sender, instance, created, **kwargs):
-
-    if created:
-        # product.check()
-        group = Group(name='ppg@{}'.format(instance.id))
-        group.save()
-
-        instance.first_owner.groups.add(group)
-        instance.private_group = group
-
-
-# Création du profil pour un nouvel utilisateur
-@receiver(post_save, sender=User)
-def create_profil_for_user(sender, instance, created, **kwargs):
-
-    if created:
-        Profil.objects.create(user=instance)
