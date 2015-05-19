@@ -7,36 +7,17 @@ from django.dispatch import receiver
 
 # Everything about Finance
 class Balance(object):
-    pass
-
-# Everything about User Finance
-class ProfilBalance(Balance, models.Model):
     
-    user = models.OneToOneField(User)
-    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-
-
-# Everything about Product Finance
-class ProductBalance(Balance, models.Model):
-    
-    product = models.OneToOneField(Product)
-    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    step = models.DecimalField(max_digits=8, decimal_places=2,
-                               null=True, blank=True)
-                               
-    # retourne le prix de la prochaine utilisation
-    @property
-    def update_price(self, nb_use):
+    def formatting(self, price):
+        return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
         
-        if self.step and nb_use * self.step <= self.cost:
-            self.price = self.step
-        else:
-            self.price = self.cost / (1 + nb_use)
-            self.price = price.quantize(Decimal('0.01'), decimal.ROUND_UP)
-        return price
-
-
+# Everything about Ownership
+class Ownership(models.Model):
+    
+    first_owner = models.ForeignKey(User)
+    is_public = models.BooleanField(default=True)
+    private_group = models.OneToOneField(Group, null=True, blank=True)
+    
 # Everything about Product
 class Product(models.Model):
     
@@ -44,10 +25,8 @@ class Product(models.Model):
     description = models.TextField(max_length=512, null=True, blank=True)
     post_date = models.DateField(auto_now_add=True)
     update_date = models.DateField(auto_now=True)
-    first_owner = models.ForeignKey(User)
-    is_public = models.BooleanField(default=True)
-    private_group = models.OneToOneField(Group, null=True, blank=True)
     balance = models.OneToOneField(ProductBalance)
+    owners = models.OneToOneField(Ownership)
 
 
     def __str__(self):
@@ -58,18 +37,6 @@ class Product(models.Model):
     def nb_use(self):
         return self.use_set.count()
 
-    # retourne le prix de la prochaine utilisation
-    @property
-    def price(self):
-        nb_use = self.nb_use
-        step = self.step
-        cost = self.cost
-        if step and nb_use * step < cost:
-            price = step
-        else:
-            price = cost / (1 + nb_use)
-            price = price.quantize(Decimal('0.01'), decimal.ROUND_UP)
-        return price
 
     # rembourse les utilisateurs précedents
     def recompute_use_balances(self):
@@ -137,6 +104,23 @@ class Product(models.Model):
             # use = Use(product = self, user= request.user)
             # use.save()
             self.use_set.create(user=user)
+# Everything about Product Finance
+class ProductBalance(Balance, models.Model):
+    
+    product = models.OneToOneField(Product)
+    initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    current_cost = models.DecimalField(max_digits=8, decimal_places=2)
+    step = models.DecimalField(max_digits=8, decimal_places=2,
+                               null=True, blank=True)
+                               
+    # retourne le prix de la prochaine utilisation
+    def updated_cost(self, nb_use):
+        if self.step and nb_use * self.step <= self.cost:
+            self.current_cost = self.step
+        else:
+            self.current_cost = self.cost / (1 + nb_use)
+            self.current_cost = self.formatting(self.current_cost)
+        return current_cost
 
 
 # Model Use
@@ -151,6 +135,12 @@ class Use(models.Model):
 class Profil(User):
         user = models.OneToOneField(User)
         balance = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+        
+# Everything about User Finance
+class ProfilBalance(Balance, models.Model):
+    
+    user = models.OneToOneField(User)
+    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 
 
 # Model PrivateGroup (Non utilisé)
