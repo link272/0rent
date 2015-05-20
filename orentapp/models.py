@@ -21,14 +21,12 @@ class BaseBalance(models.Model):
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
         
-    def credit(self, credit):
-    	self.current = self.current + credit
-    	self.current = self.formatting(self.current)
+    def credit(self, credit = 0.0):
+    	self.current = self.formatting(self.current + credit)
     	self.save()
     	
-    def debit(self, credit):
-    	self.current = self.current - debit
-    	self.current = self.formatting(self.current)
+    def debit(self, debit = 0.0):
+    	self.current = self.formatting(self.current - debit)
     	self.save()
 
 
