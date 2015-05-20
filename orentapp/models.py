@@ -13,7 +13,7 @@ Balance     =>      ProfilBalance       ProductBalance
 """
 
 # Everything about Finance
-class BaseBalance(models.Model):
+class MixinBalance(models.Model):
 
 	class Meta:
 		abstract = True
@@ -46,7 +46,7 @@ class Profil(User):
     
     
 # Everything about User Finance
-class ProfilBalance(BaseBalance):
+class ProfilBalance(MixinBalance):
 
     current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     
@@ -66,7 +66,7 @@ class Product(models.Model):
         return self.name
             
 # Everything about Product Finance
-class ProductBalance(BaseBalance):
+class ProductBalance(MixinBalance):
     
     product = models.OneToOneField(Product)
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
