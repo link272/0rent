@@ -17,6 +17,8 @@ class MixinBalance(models.Model):
 
 	class Meta:
 		abstract = True
+		
+	current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
     
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
@@ -49,8 +51,7 @@ class Profil(User):
 # Everything about User Finance
 class ProfilBalance(MixinBalance):
 
-    current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
-    
+	pass
     
 # Everything about Product
 class Product(models.Model):
@@ -70,7 +71,6 @@ class Product(models.Model):
 class ProductBalance(MixinBalance):
     
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
-    current = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.DecimalField(max_digits=8, decimal_places=2,
                                null=True, blank=True)
                                
