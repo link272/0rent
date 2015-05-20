@@ -68,7 +68,6 @@ class Product(models.Model):
 # Everything about Product Finance
 class ProductBalance(MixinBalance):
     
-    product = models.OneToOneField(Product)
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
     current = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.DecimalField(max_digits=8, decimal_places=2,
@@ -89,6 +88,7 @@ class ProductOwnership(models.Model):
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
     nb_use = models.IntegerFields(default = 0)
+    private_group = models.OneToOneField(Group, null=True, blank=True)
     product_group = models.OneToOneField(Group, null=True, blank=True)
     
     def update_nb_use(self):
