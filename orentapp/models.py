@@ -39,7 +39,7 @@ class Profil(User):
     #SIGNAUX    
     # Création du profil pour un nouvel utilisateur
     @receiver(post_save, sender=User)
-    def create_profil_for_user(sender, instance, created, **kwargs):
+    def create_profil(sender, instance, created, **kwargs):
         if created:
             Profil.objects.create(user=instance)
     #SIGNAUX
