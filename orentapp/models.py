@@ -19,6 +19,7 @@ class MixinBalance(models.Model):
 		abstract = True
 		
 	current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
+	update_date = models.DateField(auto_now=True)
     
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
@@ -59,7 +60,6 @@ class Product(models.Model):
     name = models.CharField(max_length=64)
     description = models.TextField(max_length=512, null=True, blank=True)
     post_date = models.DateField(auto_now_add=True)
-    update_date = models.DateField(auto_now=True)
     balance = models.OneToOneField(ProductBalance)
     owners = models.OneToOneField(ProductOwnership)
 
@@ -89,8 +89,9 @@ class ProductOwnership(models.Model):
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
     nb_use = models.IntegerFields(default = 0)
-    private_group = models.ForeignKey(Group, null=True, blank=True)
+    private_group = models.ForeignKey(PrivateGroup, null=True, blank=True)
     product_group = models.OneToOneField(Group, null=True, blank=True)
+    update_date = models.DateField(auto_now=True)
     
     def update_nb_use(self):
     	group = self.product_group.objects.all()
@@ -116,14 +117,51 @@ class PrivateGroup(Group):
 	members_list = models.ManytoManyFields(Profil)
 	
     
-# Model Use
-class Register(models.Model):
+
     
-    product = models.ForeignKey(Product)
-    profil = models.ForeignKey(Profil)
-    date = models.DateField(auto_now_add=True)
     
-    	
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
+    
     
     # Ajout complet d'une utilisation
     # (remboursement, maj balance utilisateur et création use)
