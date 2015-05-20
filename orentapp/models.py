@@ -89,7 +89,7 @@ class ProductOwnership(models.Model):
     first_owner = models.ForeignKey(Profil)
     is_public = models.BooleanField(default=True)
     nb_use = models.IntegerFields(default = 0)
-    private_group = models.OneToOneField(Group, null=True, blank=True)
+    private_group = models.ForeignKey(Group, null=True, blank=True)
     product_group = models.OneToOneField(Group, null=True, blank=True)
     
     def update_nb_use(self):
@@ -109,7 +109,12 @@ class ProductOwnership(models.Model):
             self.save()
     # SIGNAUX
     
-        
+class PrivateGroup(Group):
+	
+	group_name = models.CharField(max_length=64)
+	admin = models.ForeignKey(Profil)
+	members_list = models.ManytoManyFields(Profil)
+	
     
 # Model Use
 class Register(models.Model):
