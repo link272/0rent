@@ -37,22 +37,19 @@ class MixinBalance(models.Model):
 # Model Profil
 class Profil(User):
 
-    balance = models.OneToOneField(ProfilBalance)
-        
-    #SIGNAUX    
-    # Création du profil pour un nouvel utilisateur
-    @receiver(post_save, sender=User)
-    def create_profil(sender, instance, created, **kwargs):
-        if created:
-        	balance_user = ProfilBalance()
-            Profil.objects.create(user=instance, balance_user)
-    #SIGNAUX
+    balance = models.OneToOneField(ProfilBalance
+    
+    def create_profil(self, users):
+        balance_user = ProfilBalance.objects.create()
+        profil_user = Profil.objects.create(user=users, balance_user)
     
     
 # Everything about User Finance
 class ProfilBalance(MixinBalance):
 
-	pass
+	def create_balance(self):
+		balance = ProfilBalance.objects.create()
+		return balance
     
 # Everything about Product
 class Product(models.Model):
@@ -62,6 +59,12 @@ class Product(models.Model):
     post_date = models.DateField(auto_now_add=True)
     balance = models.OneToOneField(ProductBalance)
     owners = models.OneToOneField(ProductOwnership)
+    
+    def create_product(self, dic, user):
+    	balance = ProductBalance.create_balance()
+    	ownership = ProductOwership.create_ownership(dic, user)
+    	product = Product.objects.create(dic["name"],
+    	
 
 
     def __str__(self):
@@ -73,6 +76,10 @@ class ProductBalance(MixinBalance):
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.DecimalField(max_digits=8, decimal_places=2,
                                null=True, blank=True)
+                               
+   	def create_balance(self, step_balance = 0):
+		balance = ProfilBalance.objects.create(step_balance = s)
+		return balance
                                
     # recalcul le prix de la prochaine utilisation
     def update_current_cost(self, nb_use):
@@ -92,6 +99,9 @@ class ProductOwnership(models.Model):
     private_group = models.ForeignKey(PrivateGroup, null=True, blank=True)
     product_group = models.OneToOneField(Group, null=True, blank=True)
     update_date = models.DateField(auto_now=True)
+    
+    def create_ownership(self, dic):
+    	
     
     def update_nb_use(self):
     	group = self.product_group.objects.all()
