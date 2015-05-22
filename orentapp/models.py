@@ -64,9 +64,9 @@ class Product(models.Model):
     	balance_product = ProductBalance.build(dic)
     	ownership_product = ProductOwership.build(dic)
     	product = self.objects.create(name = dic["name"],
-    									description = dic["description"],
-    									balance = balance_product,
-    									owners = ownership_product)
+    					description = dic["description"],
+    					balance = balance_product,
+    					owners = ownership_product)
     	return product
     	
 
@@ -115,8 +115,8 @@ class ProductOwnership(models.Model):
     		ownership.update_nb_use()
     	else:
     		ownership = self.objects.create(first_owner = dic["first_owner"],
-    										is_public = True,
-    										product_group = product_group_owners)
+    							is_public = True,
+    							product_group = product_group_owners)
     		ownership.update_nb_use()
     	
     	
