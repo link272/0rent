@@ -20,6 +20,9 @@ class MixinBalance(models.Model):
 		
 	current = models.DecimalField(max_digits=8, decimal_places=2, default=0)
 	update_date = models.DateField(auto_now=True)
+	
+	def __str__(self):
+		return self.current
     
     def formatting(self, price):
         return price.quantize(Decimal('0.01'), decimal.ROUND_UP)
@@ -68,8 +71,6 @@ class Product(models.Model):
     					balance = balance_product,
     					owners = ownership_product)
     	return product
-    	
-
 
     def __str__(self):
         return self.name
@@ -106,17 +107,23 @@ class ProductOwnership(models.Model):
     
     def build(self, dic):
     	if dic["is_public"] == False:
-    		private_group_owners = PrivateGroup.build(dic)
+    		product_group_owners = ProductGroup.build(dic)
     		ownership = self.objects.create(first_owner = dic["first_owner"],
     							is_public = False,
-    							private_group = private_group_owners)
+    							product_group = product_group_owners)
     		ownership.update_nb_use()
     		return product
     	else:
     		ownership = self.objects.create(first_owner = dic["first_owner"],
-    							is_public = True)
+    							is_public = True,
+    							product_group = product_group_owners)
     		ownership.update_nb_use()
     		return product
+    		
+    def add_private_group(self, dic):
+    	self.private_group = PrivateGroup.build(self, dic)
+    	self.save()
+    	return self
     
     def update_nb_use(self):
     	group = self.product_group.objects.all()
