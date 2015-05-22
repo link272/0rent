@@ -44,8 +44,8 @@ class Profil(User):
     @receiver(post_save, sender=User)
     def create_profil(sender, instance, created, **kwargs):
         if created:
-        	
-            Profil.objects.create(user=instance)
+        	balance_user = ProfilBalance()
+            Profil.objects.create(user=instance, balance_user)
     #SIGNAUX
     
     
