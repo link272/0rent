@@ -106,19 +106,12 @@ class ProductOwnership(models.Model):
     update_date = models.DateField(auto_now=True)
     
     def build(self, dic):
-    	if dic["is_public"] == False:
-    		product_group_owners = ProductGroup.build(dic)
-    		ownership = self.objects.create(first_owner = dic["first_owner"],
-    							is_public = False,
+    	product_group_owners = ProductGroup.build(dic)
+    	ownership = self.objects.create(first_owner = dic["first_owner"],
+    							is_public = dic["is_public"],
     							product_group = product_group_owners)
-    		ownership.update_nb_use()
-    		return product
-    	else:
-    		ownership = self.objects.create(first_owner = dic["first_owner"],
-    							is_public = True,
-    							product_group = product_group_owners)
-    		ownership.update_nb_use()
-    		return product
+    	ownership.update_nb_use()
+    	return product
     		
     def add_private_group(self, dic):
     	self.private_group = PrivateGroup.build(self, dic)
@@ -126,10 +119,12 @@ class ProductOwnership(models.Model):
     	return self
     
     def update_nb_use(self):
-    	group = self.product_group.objects.all()
+    	if self.nb_use == 0:
+    		group = self.product_group.objects.all()
 		self.nb_use = group.count()
-		self.save()
-		return self
+	else:
+		self.nb_use += 1
+	self.save()
 	
 	# SIGNAUX
     @receiver(post_save, sender=Product)
