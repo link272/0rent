@@ -105,6 +105,8 @@ class ProductOwnership(models.Model):
     							is_public = dic["is_public"],
     							product_group = product_group_owners)
     	ownership.update_nb_use()
+    	if ownership.is_public = False:
+    		ownership.add_private_group(dic)
     	return product
     		
     def add_private_group(self, dic):
