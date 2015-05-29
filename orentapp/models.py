@@ -5,12 +5,6 @@ from django.contrib.auth.models import User, Group
 from django.db.models.signals import pre_save, post_save
 from django.dispatch import receiver
 
-"""
-                    User                Product
-                    Profil              -
-Balance     =>      ProfilBalance       ProductBalance
-                        Register <=> Ownership
-"""
 
 # Everything about Finance
 class MixinBalance(models.Model):
@@ -40,8 +34,8 @@ class MixinBalance(models.Model):
 # Model Profil
 class Profil(User):
 
-    balance = models.OneToOneField(ProfilBalance
-    
+    balance = models.OneToOneField(ProfilBalance)
+
     def build(self, dic):
         balance_user = ProfilBalance.build(dic)
         profil_user = self.create(user = dic[user], balance = balance_user)
