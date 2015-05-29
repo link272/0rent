@@ -36,16 +36,18 @@ class Profil(User):
 
     balance = models.OneToOneField(ProfilBalance)
 
-    def build(self, dic):
+	@classmethod
+    def build(cls, dic):
         balance_user = ProfilBalance.build(dic)
-        profil_user = self.create(user = dic[user], balance = balance_user)
-    	return profil_user
+        profil = cls.create(user = dic[user], balance = balance_user)
+    	return profil
     
 # Everything about User Finance
 class ProfilBalance(MixinBalance):
 
-	def build(self, dic):
-		balance = ProfilBalance.objects.create()
+	@classmethod
+	def build(cls, dic):
+		balance = cls.create()
 		return balance
     
 # Everything about Product
@@ -57,10 +59,11 @@ class Product(models.Model):
     balance = models.OneToOneField(ProductBalance)
     ownership = models.OneToOneField(ProductOwnership)
     
-    def build(self, dic):
+    @classmethod
+    def build(cls, dic):
     	balance_product = ProductBalance.build(dic)
     	ownership_product = ProductOwership.build(dic)
-    	product = self.objects.create(name = dic["name"],
+    	product = cls.create(name = dic["name"],
     					description = dic["description"],
     					balance = balance_product,
     					owners = ownership_product)
@@ -75,9 +78,10 @@ class ProductBalance(MixinBalance):
     initial_cost = models.DecimalField(max_digits=8, decimal_places=2)
     step = models.DecimalField(max_digits=8, decimal_places=2,
                                null=True, blank=True)
-                               
+    
+    @classmethod                           
    	def build(self, dic):
-		balance = self.objects.create(dic[step])
+		balance = cls.create(dic[initial_cost], dic[step])
 		return balance
                                
     # recalcul le prix de la prochaine utilisation
@@ -99,9 +103,10 @@ class ProductOwnership(models.Model):
     product_group = models.OneToOneField(Group, null=True, blank=True)
     update_date = models.DateField(auto_now=True)
     
-    def build(self, dic):
+    @classmethod
+    def build(cls, dic):
     	product_group_owners = ProductGroup.build(dic)
-    	ownership = self.objects.create(first_owner = dic["first_owner"],
+    	ownership = cls.create(first_owner = dic["first_owner"],
     							is_public = dic["is_public"],
     							product_group = product_group_owners)
     	ownership.update_nb_use()
@@ -133,32 +138,34 @@ class ProductOwnership(models.Model):
             self.save()
     # SIGNAUX
     
-class PrivateGroup(Group):
+class GroupMixin(models.Model):
 	
-	group_name = models.CharField(max_length=64)
+	class Meta:
+		abstract = True
+	
+	def register_group(self, *args):
+		for user in args:
+			user.group.add(self)
+		return self
+    
+class PrivateGroup(Group, GroupMixin):
+	
 	admin = models.ForeignKey(Profil)
-	members_list = models.ManytoManyFields(Profil)
 	
-	def build(self, dic):
-		group = self.objects.create(group_name = dic["group_name"], admin = dic ["admin"])
-		group.objects.add(dic["private_group_members"])
+	@classmethod
+	def build(cls, dic):
+		group = cls.create(group_name = dic["group_name"], admin = dic ["admin"])
+		group.register_group(*dic["private_group_members"])
 		return group
 		
-	def register_members(self, *args):
-		self.members_list.add(arg)
-		return self
 		
-class ProductGroup(Group):
+class ProductGroup(Group, GroupMixin):
 	
-	def build(dic):
-		group = self.objects.create()
-		group.objects.add(dic["product_group_members"])
+	@classmethod
+	def build(cls, dic):
+		group = cls.create()
+		group.register_group(*dic["product_group_members"])
 		return group
-	
-	def register_members(self, *args):
-		self.users.add(arg)
-		return self
-	
     
 
     
